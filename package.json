@@ -1,0 +1,15 @@
+{
+  "name": "stylus-workshop-counter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:unit": "cargo watch -x 'test --locked --lib -- --nocapture'",
+    "test:e2e": "./scripts/tests/test-e2e.sh",
+    "export-abi": "cargo stylus export-abi",
+    "nitro-node": "./scripts/tests/nitro-testnode.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
