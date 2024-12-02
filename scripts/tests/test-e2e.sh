@@ -6,4 +6,4 @@ cargo stylus check
 
 # Run tests
 export RPC_URL=http://localhost:8547
-cargo watch -x 'test --locked --test "integration_tests" --features export-abi -- --nocapture'
+cargo test --locked --test "integration_tests" --features export-abi -- --nocapture

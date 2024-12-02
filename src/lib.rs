@@ -3,15 +3,17 @@ extern crate alloc;
 
 mod constants;
 mod errors;
+mod interfaces;
 
 use std::ops::Add;
 
 use alloy_primitives::{hex::FromHex, U256};
 use constants::OWNER;
 use errors::{NotOwner, TokenSaleErrors, ZeroAddressNotAllowed};
+use interfaces::IERC20;
 use stylus_sdk::{
     alloy_primitives::Address,
-    msg,
+    console, contract, msg,
     prelude::*,
     storage::{StorageAddress, StorageBool, StorageMap, StorageU256, StorageUint, StorageVec},
 };
@@ -35,7 +37,7 @@ impl TokenSale {
     pub fn initialise(
         &mut self,
         admin: Address,
-        token: Address,
+        token: IERC20,
         oracle: Address,
         total_supply: U256,
         sale_end: U256,
@@ -55,6 +57,17 @@ impl TokenSale {
                 ZeroAddressNotAllowed {},
             ));
         }
+
+        let allowance = token.allowance(&*self, admin, contract::address()).unwrap();
+        if allowance < total_supply {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
+
+        token
+            .transfer_from(&mut *self, admin, contract::address(), total_supply)
+            .unwrap();
 
         Ok(())
     }

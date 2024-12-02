@@ -51,7 +51,13 @@ async fn it_can_be_initialised(alice: Account, bob: Account) -> Result<()> {
     let oracle_contract = Oracle::new(oracle_address, &alice.wallet);
 
     let _ = send!(token_contract.mint(alice.address(), parse_ether(MINT_AMOUNT).unwrap()));
-    let _ = send!(token_contract.approve(token_address, parse_ether(ADMIN_TOTAL_SUPPLY).unwrap()));
+    let _ = send!(token_contract.approve(contract_addr, parse_ether(ADMIN_TOTAL_SUPPLY).unwrap()));
+
+    let bal_before = token_contract
+        .balanceOf(alice.address())
+        .call()
+        .await
+        .unwrap();
 
     let _ = send!(contract.initialise(
         alice.address(),
@@ -60,7 +66,17 @@ async fn it_can_be_initialised(alice: Account, bob: Account) -> Result<()> {
         parse_ether(ADMIN_TOTAL_SUPPLY).unwrap(),
         U256::from(1000000000),
         vec![usdc_address],
-    ));
+    ))
+    .unwrap();
+
+    let bal_after = token_contract
+        .balanceOf(alice.address())
+        .call()
+        .await
+        .unwrap();
+
+    println!("bal_before {}", bal_before.balance);
+    println!("bal_before {}", bal_after.balance);
 
     let ITokenSale::isInitialisedReturn { isInitialised } = contract.isInitialised().call().await?;
 
