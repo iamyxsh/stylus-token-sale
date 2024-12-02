@@ -8,7 +8,7 @@ sol!(
 
     function buyToken(uint256 amount, address token_in, uint8 price_index) external;
 
-    function buy(uint256 amount, uint8 price_index) external payable;
+    function withdraw(address token_addr) external;
 
     function isInitialised() external view returns (bool isInitialised);
 

@@ -26,7 +26,6 @@ pub struct TokenSale {
     tokens_sold: StorageU256,
     sale_end: StorageU256,
     current_price_usd: StorageU256,
-    supported_tokens: StorageMap<Address, StorageBool>,
     collected_amount: StorageMap<Address, StorageU256>,
 }
 
@@ -35,8 +34,8 @@ impl TokenSale {
     pub fn initialise(
         &mut self,
         admin: Address,
-        token: IERC20,
-        oracle: IOracle,
+        token: Address,
+        oracle: Address,
         total_supply: U256,
         sale_end: U256,
         initial_price: U256,
@@ -51,14 +50,20 @@ impl TokenSale {
         //     return Err(TokenSaleErrors::NotOwner(NotOwner {}));
         // }
 
-        if admin.is_zero() || token.is_zero() || oracle.is_zero() {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        // NOTICE: commented out due to "max code size exceeded" reason
 
-        self.supported_tokens.insert(Address::ZERO, true);
-        self.collected_amount.insert(Address::ZERO, U256::ZERO);
+        // if admin.is_zero() || token.is_zero() || oracle.is_zero() {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+        // Also, Address Zero notifies Native Gas Currency which can be used
+        // to buy tokens. Commented out as I will not be able to implement that
+        // due to the contract size issue.
+
+        // self.collected_amount.insert(Address::ZERO, U256::ZERO);
 
         if sale_end < U256::from(block::timestamp()) {
             return Err(TokenSaleErrors::ZeroAddressNotAllowed(
@@ -68,33 +73,34 @@ impl TokenSale {
 
         if supported_tokens.len() > 0 {
             for s_token in supported_tokens {
-                self.supported_tokens.insert(s_token, true);
                 self.collected_amount.insert(s_token, U256::ZERO);
             }
         }
 
-        let allowance = token.allowance(&*self, admin, contract::address()).unwrap();
-        if allowance < total_supply {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        // NOTICE: commented out due to "max code size exceeded" reason
 
-        let ok = token
-            .transfer_from(&mut *self, admin, contract::address(), total_supply)
-            .unwrap();
+        // let allowance = token.allowance(&*self, admin, contract::address()).unwrap();
+        // if allowance < total_supply {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
 
-        if !ok {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        self.transfer_token_from(token, total_supply, admin, contract::address());
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // if !ok {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
 
         self.is_initialised.set(true);
         self.admin.set(admin);
-        self.token.set(token.address);
+        self.token.set(token);
         self.tokens_sold.set(U256::ZERO);
-        self.oracle.set(oracle.address);
+        self.oracle.set(oracle);
         self.total_supply.set(total_supply);
         self.sale_end.set(sale_end);
         self.current_price_usd.set(initial_price);
@@ -105,38 +111,50 @@ impl TokenSale {
     pub fn buy_token(
         &mut self,
         amount: U256,
-        token_in: IERC20,
+        token_in: Address,
         price_index: u8,
     ) -> Result<(), TokenSaleErrors> {
-        if amount.is_zero() {
+        if self.sale_end.get() < U256::from(block::timestamp()) {
             return Err(TokenSaleErrors::ZeroAddressNotAllowed(
                 ZeroAddressNotAllowed {},
             ));
         }
+        // NOTICE: commented out due to "max code size exceeded" reason
 
-        if !self.supported_tokens.get(token_in.address) {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        // if amount.is_zero() {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
 
-        if self.total_supply.get() < self.tokens_sold.get() + amount {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        // NOTICE: commented out due to "max code size exceeded" reason
 
-        let allowance = token_in
-            .allowance(&*self, msg::sender(), contract::address())
-            .unwrap();
-        if allowance < amount {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        // if !self.supported_tokens.get(token_in.address) {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
 
-        let oracle = IOracle::new(self.oracle.get());
-        let price = oracle.get_price(&*self, price_index).unwrap();
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // if self.total_supply.get() < self.tokens_sold.get() + amount {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // let allowance = token_in
+        //     .allowance(&*self, msg::sender(), contract::address())
+        //     .unwrap();
+        // if allowance < amount {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        let price = self.get_price(price_index);
 
         let current_price = self.current_price_usd.get();
 
@@ -146,29 +164,40 @@ impl TokenSale {
 
         self.current_price_usd.set(self.calculate_price());
 
-        let ok = token_in
-            .transfer_from(&mut *self, msg::sender(), contract::address(), amount)
-            .unwrap();
-        if !ok {
+        self.transfer_token_from(token_in, amount, msg::sender(), contract::address());
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // if !ok {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        self.transfer_token(self.token.get(), amount_out, msg::sender());
+
+        let mut amount_setter = self.collected_amount.setter(token_in);
+        let old_amount = amount_setter.get();
+        amount_setter.set(old_amount + amount);
+
+        Ok(())
+    }
+
+    pub fn withdraw(&mut self, token_addr: Address) -> Result<(), TokenSaleErrors> {
+        if msg::sender() != self.admin.get() {
             return Err(TokenSaleErrors::ZeroAddressNotAllowed(
                 ZeroAddressNotAllowed {},
             ));
         }
 
-        let token = IERC20::new(self.token.get());
-        let ok = token
-            .transfer(&mut *self, msg::sender(), amount_out)
-            .unwrap();
-        if !ok {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
-        }
+        self.transfer_token(
+            token_addr,
+            self.collected_amount.get(token_addr),
+            msg::sender(),
+        );
 
-        let _ = self
-            .collected_amount
-            .setter(token_in.address)
-            .checked_add(amount);
+        let mut amount_setter = self.collected_amount.setter(token_addr);
+        amount_setter.set(U256::from(0));
 
         Ok(())
     }
@@ -186,5 +215,42 @@ impl TokenSale {
             + (self.current_price_usd.get() * increments / U256::from(1));
 
         new_price
+    }
+
+    fn get_price(&self, price_index: u8) -> U256 {
+        let oracle = IOracle::new(self.oracle.get());
+        oracle.get_price(&*self, price_index).unwrap()
+    }
+
+    fn transfer_token(&mut self, token_addr: Address, amount: U256, to: Address) {
+        let token = IERC20::new(token_addr);
+        let _ = token.transfer(&mut *self, to, amount).unwrap();
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // if !ok {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+    }
+
+    fn transfer_token_from(
+        &mut self,
+        token_addr: Address,
+        amount: U256,
+        from: Address,
+        to: Address,
+    ) {
+        let token = IERC20::new(token_addr);
+        let _ = token.transfer_from(&mut *self, from, to, amount).unwrap();
+
+        // NOTICE: commented out due to "max code size exceeded" reason
+
+        // if !ok {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
     }
 }
