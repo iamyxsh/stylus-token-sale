@@ -3227,14 +3227,9 @@ dependencies = [
 name = "stylus-counter"
 version = "0.1.0"
 dependencies = [
- "alloy",
  "alloy-primitives",
- "alloy-sol-macro",
- "alloy-sol-macro-expander",
- "alloy-sol-macro-input",
  "alloy-sol-types",
  "e2e",
- "hex",
  "motsu",
  "stylus-sdk",
 ]

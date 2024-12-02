@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use alloy::{primitives::Address, sol};
-use e2e::{eyre, Wallet};
+use alloy_primitives::Address;
+use e2e::{alloy::sol, eyre, Wallet};
 
 sol! {
       enum PRICE_INDEX {
