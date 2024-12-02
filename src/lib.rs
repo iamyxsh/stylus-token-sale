@@ -149,12 +149,7 @@ impl TokenSale {
         //         ZeroAddressNotAllowed {},
         //     ));
         // }
-
-        let price = self.get_price(price_index);
-
-        let current_price = self.current_price_usd.get();
-
-        let amount_out = (amount * price) / current_price;
+        let amount_out = self.calculate_amount_out(amount, price_index);
 
         self.tokens_sold.set(self.tokens_sold.get() + amount_out);
 
@@ -195,6 +190,14 @@ impl TokenSale {
 
     pub fn is_initialised(&self) -> bool {
         self.is_initialised.get()
+    }
+
+    pub fn calculate_amount_out(&self, amount: U256, price_index: u8) -> U256 {
+        let price = self.get_price(price_index);
+
+        let current_price = self.current_price_usd.get();
+
+        (amount * price) / current_price
     }
 }
 
