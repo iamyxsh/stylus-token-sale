@@ -140,7 +140,7 @@ impl TokenSale {
 
         let current_price = self.current_price_usd.get();
 
-        let amount_out = TokenSale::calculate_token_out_amount(amount, price, current_price);
+        let amount_out = (amount * price) / current_price;
 
         self.tokens_sold.set(self.tokens_sold.get() + amount_out);
 
@@ -165,11 +165,13 @@ impl TokenSale {
             ));
         }
 
+        let _ = self
+            .collected_amount
+            .setter(token_in.address)
+            .checked_add(amount);
+
         Ok(())
     }
-
-    #[payable]
-    pub fn buy(&mut self, amount: U256, price_index: u8) {}
 
     pub fn is_initialised(&self) -> bool {
         self.is_initialised.get()
@@ -177,14 +179,6 @@ impl TokenSale {
 }
 
 impl TokenSale {
-    fn calculate_token_out_amount(
-        amount_in: U256,
-        price_in_usd: U256,
-        price_out_usd: U256,
-    ) -> U256 {
-        (amount_in * price_in_usd) / price_out_usd
-    }
-
     fn calculate_price(&self) -> U256 {
         let increments = self.tokens_sold.get() * U256::from(10) / self.total_supply.get();
 

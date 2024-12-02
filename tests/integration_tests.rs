@@ -126,6 +126,7 @@ async fn it_can_be_buy_using_usdc(alice: Account, bob: Account) -> Result<()> {
     .unwrap();
 
     let contract_bob = ITokenSale::new(contract_addr, &bob.wallet);
+    let token_contract_bob = ERC20Mock::new(token_address, &bob.wallet);
     let usdc_contract_bob = ERC20Mock::new(usdc_address, &bob.wallet);
 
     let _ = send!(usdc_contract_bob.approve(contract_addr, parse_ether("10").unwrap())).unwrap();
@@ -137,6 +138,24 @@ async fn it_can_be_buy_using_usdc(alice: Account, bob: Account) -> Result<()> {
 
     let bob_token_bal_after = token_contract.balanceOf(bob.address()).call().await?;
     let bob_usdc_bal_after = usdc_contract.balanceOf(bob.address()).call().await?;
+
+    println!(
+        "bob_usdc_bal_before -> {}",
+        format_ether(bob_usdc_bal_before.balance)
+    );
+    println!(
+        "bob_token_bal_before -> {}",
+        format_ether(bob_token_bal_before.balance)
+    );
+
+    println!(
+        "bob_token_bal_after -> {}",
+        format_ether(bob_token_bal_after.balance)
+    );
+    println!(
+        "bob_usdc_bal_after -> {}",
+        format_ether(bob_usdc_bal_after.balance)
+    );
 
     assert!(bob_token_bal_after.balance > bob_token_bal_before.balance);
 
