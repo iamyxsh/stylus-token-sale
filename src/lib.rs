@@ -6,7 +6,7 @@ mod errors;
 mod interfaces;
 
 use alloc::vec::Vec;
-use errors::{TokenSaleErrors, ZeroAddressNotAllowed};
+use errors::{EndtimeInPast, NotAdmin, SaleEnded, TokenSaleErrors};
 use interfaces::{IOracle, IERC20};
 use stylus_sdk::{
     alloy_primitives::{Address, U256},
@@ -66,9 +66,7 @@ impl TokenSale {
         // self.collected_amount.insert(Address::ZERO, U256::ZERO);
 
         if sale_end < U256::from(block::timestamp()) {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
+            return Err(TokenSaleErrors::EndtimeInPast(EndtimeInPast {}));
         }
 
         if supported_tokens.len() > 0 {
@@ -115,9 +113,7 @@ impl TokenSale {
         price_index: u8,
     ) -> Result<(), TokenSaleErrors> {
         if self.sale_end.get() < U256::from(block::timestamp()) {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
+            return Err(TokenSaleErrors::SaleEnded(SaleEnded {}));
         }
         // NOTICE: commented out due to "max code size exceeded" reason
 
@@ -176,18 +172,14 @@ impl TokenSale {
 
         self.transfer_token(self.token.get(), amount_out, msg::sender());
 
-        let mut amount_setter = self.collected_amount.setter(token_in);
-        let old_amount = amount_setter.get();
-        amount_setter.set(old_amount + amount);
+        self.set_collected_amount(token_in, self.collected_amount.get(token_in) + amount);
 
         Ok(())
     }
 
     pub fn withdraw(&mut self, token_addr: Address) -> Result<(), TokenSaleErrors> {
         if msg::sender() != self.admin.get() {
-            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-                ZeroAddressNotAllowed {},
-            ));
+            return Err(TokenSaleErrors::NotAdmin(NotAdmin {}));
         }
 
         self.transfer_token(
@@ -196,8 +188,7 @@ impl TokenSale {
             msg::sender(),
         );
 
-        let mut amount_setter = self.collected_amount.setter(token_addr);
-        amount_setter.set(U256::from(0));
+        self.set_collected_amount(token_addr, U256::from(0));
 
         Ok(())
     }
@@ -252,5 +243,10 @@ impl TokenSale {
         //         ZeroAddressNotAllowed {},
         //     ));
         // }
+    }
+
+    fn set_collected_amount(&mut self, token_addr: Address, new_amount: U256) {
+        let mut amount_setter = self.collected_amount.setter(token_addr);
+        amount_setter.set(new_amount);
     }
 }
