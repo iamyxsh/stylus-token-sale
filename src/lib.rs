@@ -5,7 +5,9 @@ mod constants;
 mod errors;
 mod interfaces;
 
-use alloy_primitives::U256;
+use std::usize;
+
+use alloy_primitives::{U256, U8};
 use errors::{TokenSaleErrors, ZeroAddressNotAllowed};
 use interfaces::{IOracle, IERC20};
 use stylus_sdk::{
@@ -26,7 +28,7 @@ pub struct TokenSale {
     tokens_sold: StorageU256,
     sale_end: StorageU256,
     current_price_usd: StorageU256,
-    supported_tokens: StorageVec<StorageAddress>,
+    supported_tokens: StorageMap<Address, StorageBool>,
     collected_amount: StorageMap<Address, StorageU256>,
 }
 
@@ -57,7 +59,7 @@ impl TokenSale {
             ));
         }
 
-        self.supported_tokens.push(Address::ZERO);
+        self.supported_tokens.insert(Address::ZERO, true);
         self.collected_amount.insert(Address::ZERO, U256::ZERO);
 
         if sale_end < U256::from(block::timestamp()) {
@@ -68,7 +70,7 @@ impl TokenSale {
 
         if supported_tokens.len() > 0 {
             for s_token in supported_tokens {
-                self.supported_tokens.push(s_token);
+                self.supported_tokens.insert(s_token, true);
                 self.collected_amount.insert(s_token, U256::ZERO);
             }
         }
@@ -101,6 +103,57 @@ impl TokenSale {
 
         Ok(())
     }
+
+    pub fn buy_token(
+        &mut self,
+        amount: U256,
+        token_in: IERC20,
+        price_index: u8,
+    ) -> Result<(), TokenSaleErrors> {
+        // if amount.is_zero() {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // if !self.supported_tokens.get(token_in.address) {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // if self.total_supply.get() < self.tokens_sold.get() + amount {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // let allowance = token_in
+        //     .allowance(&*self, msg::sender(), contract::address())
+        //     .unwrap();
+        // if allowance < amount {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        // let oracle = IOracle::new(self.oracle.get());
+        // let price = oracle.get_price(&*self, price_index);
+
+        // let ok = token_in
+        //     .transfer_from(&mut *self, msg::sender(), contract::address(), amount)
+        //     .unwrap();
+        // if !ok {
+        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+        //         ZeroAddressNotAllowed {},
+        //     ));
+        // }
+
+        Ok(())
+    }
+
+    #[payable]
+    pub fn buy(&mut self, amount: U256, price_index: u8) {}
 
     pub fn is_initialised(&self) -> bool {
         self.is_initialised.get()
