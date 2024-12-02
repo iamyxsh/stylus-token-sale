@@ -1,20 +1,18 @@
-#[warn(unused_doc_comments)]
+#![cfg_attr(not(feature = "export-abi"), no_main, no_std)]
 extern crate alloc;
 
 mod constants;
 mod errors;
 mod interfaces;
 
-use std::usize;
-
-use alloy_primitives::{U256, U8};
+use alloc::vec::Vec;
 use errors::{TokenSaleErrors, ZeroAddressNotAllowed};
 use interfaces::{IOracle, IERC20};
 use stylus_sdk::{
-    alloy_primitives::Address,
+    alloy_primitives::{Address, U256},
     block, console, contract, msg,
     prelude::*,
-    storage::{StorageAddress, StorageBool, StorageMap, StorageU256, StorageUint, StorageVec},
+    storage::{StorageAddress, StorageBool, StorageMap, StorageU256},
 };
 
 #[storage]
@@ -110,44 +108,62 @@ impl TokenSale {
         token_in: IERC20,
         price_index: u8,
     ) -> Result<(), TokenSaleErrors> {
-        // if amount.is_zero() {
-        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-        //         ZeroAddressNotAllowed {},
-        //     ));
-        // }
+        if amount.is_zero() {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
 
-        // if !self.supported_tokens.get(token_in.address) {
-        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-        //         ZeroAddressNotAllowed {},
-        //     ));
-        // }
+        if !self.supported_tokens.get(token_in.address) {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
 
-        // if self.total_supply.get() < self.tokens_sold.get() + amount {
-        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-        //         ZeroAddressNotAllowed {},
-        //     ));
-        // }
+        if self.total_supply.get() < self.tokens_sold.get() + amount {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
 
-        // let allowance = token_in
-        //     .allowance(&*self, msg::sender(), contract::address())
-        //     .unwrap();
-        // if allowance < amount {
-        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-        //         ZeroAddressNotAllowed {},
-        //     ));
-        // }
+        let allowance = token_in
+            .allowance(&*self, msg::sender(), contract::address())
+            .unwrap();
+        if allowance < amount {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
 
-        // let oracle = IOracle::new(self.oracle.get());
-        // let price = oracle.get_price(&*self, price_index);
+        let oracle = IOracle::new(self.oracle.get());
+        let price = oracle.get_price(&*self, price_index).unwrap();
 
-        // let ok = token_in
-        //     .transfer_from(&mut *self, msg::sender(), contract::address(), amount)
-        //     .unwrap();
-        // if !ok {
-        //     return Err(TokenSaleErrors::ZeroAddressNotAllowed(
-        //         ZeroAddressNotAllowed {},
-        //     ));
-        // }
+        let current_price = self.current_price_usd.get();
+
+        let amount_out = TokenSale::calculate_token_out_amount(amount, price, current_price);
+
+        self.tokens_sold.set(self.tokens_sold.get() + amount_out);
+
+        self.current_price_usd.set(self.calculate_price());
+
+        let ok = token_in
+            .transfer_from(&mut *self, msg::sender(), contract::address(), amount)
+            .unwrap();
+        if !ok {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
+
+        let token = IERC20::new(self.token.get());
+        let ok = token
+            .transfer(&mut *self, msg::sender(), amount_out)
+            .unwrap();
+        if !ok {
+            return Err(TokenSaleErrors::ZeroAddressNotAllowed(
+                ZeroAddressNotAllowed {},
+            ));
+        }
 
         Ok(())
     }
@@ -157,5 +173,24 @@ impl TokenSale {
 
     pub fn is_initialised(&self) -> bool {
         self.is_initialised.get()
+    }
+}
+
+impl TokenSale {
+    fn calculate_token_out_amount(
+        amount_in: U256,
+        price_in_usd: U256,
+        price_out_usd: U256,
+    ) -> U256 {
+        (amount_in * price_in_usd) / price_out_usd
+    }
+
+    fn calculate_price(&self) -> U256 {
+        let increments = self.tokens_sold.get() * U256::from(10) / self.total_supply.get();
+
+        let new_price = self.current_price_usd.get()
+            + (self.current_price_usd.get() * increments / U256::from(1));
+
+        new_price
     }
 }

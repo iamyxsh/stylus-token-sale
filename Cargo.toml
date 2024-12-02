@@ -4,13 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy-primitives = "=0.7.6"
 alloy-sol-types = "=0.7.6"
-stylus-sdk = { version = "0.6.0", default-features = false }
+stylus-sdk = { version = "0.6.0" }
 
 [dev-dependencies]
 motsu = "0.1.0-rc"
 e2e = { git = "https://github.com/TucksonDev/e2e-lib.git" }
+alloy-primitives = "=0.7.6"
+
 
 [features]
 export-abi = ["stylus-sdk/export-abi"]

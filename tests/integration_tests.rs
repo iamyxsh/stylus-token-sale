@@ -3,7 +3,7 @@ use std::str::FromStr;
 mod abi;
 mod mocks;
 
-use alloy_primitives::{Address, Uint, U256};
+use alloy_primitives::{utils::format_ether, Address, Uint, U256};
 // e2e module
 use e2e::{
     alloy::{primitives::utils::parse_ether, providers::Provider},
@@ -126,28 +126,21 @@ async fn it_can_be_buy_using_usdc(alice: Account, bob: Account) -> Result<()> {
     .unwrap();
 
     let contract_bob = ITokenSale::new(contract_addr, &bob.wallet);
-    let token_contract_bob = ERC20Mock::new(token_address, &bob.wallet);
     let usdc_contract_bob = ERC20Mock::new(usdc_address, &bob.wallet);
 
     let _ = send!(usdc_contract_bob.approve(contract_addr, parse_ether("10").unwrap())).unwrap();
 
-    // let bob_usdc_bal_before = token_contract_alice.balanceOf(bob.address()).call().await?;
-    // let bob_token_bal_before = token_contract_alice.balanceOf(bob.address()).call().await?;
+    let bob_usdc_bal_before = usdc_contract.balanceOf(bob.address()).call().await?;
+    let bob_token_bal_before = token_contract.balanceOf(bob.address()).call().await?;
 
-    // let _ = send!(contract_bob.buyToken(parse_ether("10").unwrap(), usdc_address, 1)).unwrap();
+    let _ = send!(contract_bob.buyToken(parse_ether("10").unwrap(), usdc_address, 1)).unwrap();
 
-    // let bob_token_bal_after = token_contract_alice.balanceOf(bob.address()).call().await?;
-    // let bob_usdc_bal_after = token_contract_alice.balanceOf(bob.address()).call().await?;
+    let bob_token_bal_after = token_contract.balanceOf(bob.address()).call().await?;
+    let bob_usdc_bal_after = usdc_contract.balanceOf(bob.address()).call().await?;
 
-    // assert_eq!(
-    //     bob_token_bal_after.balance - bob_token_bal_before.balance,
-    //     parse_ether("1").unwrap()
-    // );
+    assert!(bob_token_bal_after.balance > bob_token_bal_before.balance);
 
-    // assert_eq!(
-    //     bob_usdc_bal_before.balance - bob_usdc_bal_after.balance,
-    //     parse_ether("10").unwrap()
-    // );
+    assert!(bob_usdc_bal_after.balance < bob_usdc_bal_before.balance);
 
     Ok(())
 }
