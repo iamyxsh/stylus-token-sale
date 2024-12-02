@@ -48,12 +48,13 @@ async fn it_can_be_initialised(alice: Account, bob: Account) -> Result<()> {
     let usdc_address = erc20::deploy(&alice.wallet).await?;
     let usdc_contract = ERC20Mock::new(usdc_address, &alice.wallet);
     let oracle_address = oracle::deploy(&alice.wallet).await?;
-    let oracle_contract = Oracle::new(oracle_address, &alice.wallet);
+
+    let _ = send!(usdc_contract.mint(bob.address(), parse_ether(MINT_AMOUNT).unwrap()));
 
     let _ = send!(token_contract.mint(alice.address(), parse_ether(MINT_AMOUNT).unwrap()));
     let _ = send!(token_contract.approve(contract_addr, parse_ether(ADMIN_TOTAL_SUPPLY).unwrap()));
 
-    let bal_before = token_contract
+    let alice_bal_before = token_contract
         .balanceOf(alice.address())
         .call()
         .await
@@ -64,19 +65,33 @@ async fn it_can_be_initialised(alice: Account, bob: Account) -> Result<()> {
         token_address,
         oracle_address,
         parse_ether(ADMIN_TOTAL_SUPPLY).unwrap(),
-        U256::from(1000000000),
+        parse_ether("1").unwrap(),
+        parse_ether("1").unwrap(),
         vec![usdc_address],
     ))
     .unwrap();
 
-    let bal_after = token_contract
+    let alice_bal_after = token_contract
         .balanceOf(alice.address())
         .call()
         .await
         .unwrap();
 
-    println!("bal_before {}", bal_before.balance);
-    println!("bal_before {}", bal_after.balance);
+    assert_eq!(
+        alice_bal_before.balance - alice_bal_after.balance,
+        parse_ether(ADMIN_TOTAL_SUPPLY).unwrap()
+    );
+
+    let token_contract_bal = token_contract
+        .balanceOf(contract_addr)
+        .call()
+        .await
+        .unwrap();
+
+    assert_eq!(
+        token_contract_bal.balance,
+        parse_ether(ADMIN_TOTAL_SUPPLY).unwrap()
+    );
 
     let ITokenSale::isInitialisedReturn { isInitialised } = contract.isInitialised().call().await?;
 
