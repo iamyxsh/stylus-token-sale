@@ -31,8 +31,8 @@ These are the protocol contracts -
 
 1. Front Running
 
-Due to the lack of constructor (technically constructors are supported in stylus, I have not implemented), it is possible that the Token Sale contract can be front run. After the deployment of constructor, any one call the `fn initialise()`. Because of this the pre configured owner should be hardcoded in the contract and should only be allowed to call `fn initialise()`.
+Due to the absence of a constructor (although constructors are technically supported in Stylus, I have not implemented one), the Token Sale contract is vulnerable to front-running. After deployment, anyone can call the `fn initialise()` function. To prevent this, the pre-configured owner should be hardcoded into the contract and restricted to calling the `fn initialise()` function.
 
 2. Contract Size
 
-I encountered an error - "error code -32000: max code size exceeded" due to the size of the contract being more that 24kb. This is the current limit and the most optimized the stylus sdk can do. For this reason, I have commented out some of the basic checks and obvious logic. Current size is around `23.7kb`.
+I encountered an error: "error code -32000: max code size exceeded", which occurred because the contract size exceeded the `24 KB` limit. This is the current limit for Stylus SDK optimization. To address this, I have commented out some basic checks and obvious logic. The current contract size is approximately `23.7 KB`.
