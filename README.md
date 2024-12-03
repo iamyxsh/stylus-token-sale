@@ -18,7 +18,7 @@ pnpm test:e2e
 
 ## Basic Idea of the Project.
 
-This token sale was designed to be as close to production as possible. The [Test Token (TST)](https://testnet.routescan.io/address/0x4f5b41d4935969496559230562D8808F242C8dAc/contract/421614/readContract?chainid=421614) is the outgoing token of this contract. In exchange of any of the supported tokens (for now [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)) based on the price from the [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code), the user can buy the TST token. The admin can then withdraw the collected amount by calling `fn withdraw()`. The sale will be only live till specified. 
+This token sale was designed to be as close to production as possible. The [Test Token (TST)](https://testnet.routescan.io/address/0x4f5b41d4935969496559230562D8808F242C8dAc/contract/421614/readContract?chainid=421614) is the outgoing token of this contract. In exchange of any of the supported tokens (for now [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)) based on the price from the [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code), the user can buy the TST token. The admin can then withdraw the collected amount by calling `fn withdraw()`. The sale will be only live till specified.
 
 These are the protocol contracts -
 
@@ -27,7 +27,7 @@ These are the protocol contracts -
 - [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)
 - [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code)
 
-## Basic Idea of the Project.
+## Known Limitations.
 
 1. Front Running
 
