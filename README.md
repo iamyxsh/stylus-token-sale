@@ -1,69 +1,38 @@
-# Stylus workshop: Counter contract
+# Stylus: Token Sale
 
-Simple Counter contract written in Rust.
+A Token Sale contract written in Rust with Stylus SDK to be deployed to Arbitrum Sepolia.
 
 ## Getting started
 
-Follow the instructions in the [Stylus quickstart](https://docs.arbitrum.io/stylus/stylus-quickstart) to configure your development environment.
+1. You need to start a nitro-dev local node.
 
-You'll also need [Foundry](https://github.com/foundry-rs/foundry) to interact with the contract.
-
-## Check and deploy
-
-You can use [cargo stylus](https://github.com/OffchainLabs/cargo-stylus) to check that your contract is compatible with Stylus by running
-
-```shell
-cargo stylus check
+```bash
+pnpm nitro-node
 ```
 
-With the following command you can deploy it to an Arbitrum chain
+2. Run e2e tests.
 
-```shell
-cargo stylus deploy --endpoint $RPC_URL --private-key $PRIVATE_KEY
+```bash
+pnpm test:e2e
 ```
 
-Alternatively, you can use the bash scripts available to build and deploy the contract:
+## Basic Idea of the Project.
 
-- [build.sh](/scripts/build.sh)
-- [deploy.sh](/scripts/deploy.sh): this script requires the environment variables `$RPC_URL` and `$PRIVATE_KEY`.
+This token sale was designed to be as close to production as possible. The [Test Token (TST)](https://testnet.routescan.io/address/0x4f5b41d4935969496559230562D8808F242C8dAc/contract/421614/readContract?chainid=421614) is the outgoing token of this contract. In exchange of any of the supported tokens (for now [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)) based on the price from the [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code), the user can buy the TST token.
 
-## Tests
+These are the protocol contracts -
 
-For unit testing, this example integrates the [motsu](https://github.com/OpenZeppelin/rust-contracts-stylus/tree/main/lib/motsu) library from OpenZeppelin. To run unit tests, you can simply use
+- [Token Contract](https://sepolia.arbiscan.io/address/0xae0737b533d27742b7bd7d4e0bb3dcad6d78034d)
+- [Test Token (TST)](https://testnet.routescan.io/address/0x4f5b41d4935969496559230562D8808F242C8dAc/contract/421614/readContract?chainid=421614)
+- [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)
+- [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code)
 
-```shell
-cargo test --locked --lib
-```
+## Basic Idea of the Project.
 
-Alternatively, you can use the bash script available [test-unit.sh](/scripts/tests/test-unit.sh).
+1. Front Running
 
-For integration tests, this example integrates a fork of the [e2e](https://github.com/OpenZeppelin/rust-contracts-stylus/tree/main/lib/e2e) library from OpenZeppelin available [here](https://github.com/TucksonDev/e2e-lib). To run the tests you need to run a [nitro-testnode](https://github.com/OffchainLabs/nitro-testnode). A script is available to clone and run the nitro-testnode, [nitro-testnode.sh](/scripts/tests/nitro-testnode.sh). Once the nitro-testnode is running, you can run the e2e tests using the script available [test-e2e.sh](/scripts/tests/test-e2e.sh).
+Due to the lack of constructor (technically constructors are supported in stylus, I have not implemented), it is possible that the Token Sale contract can be front run. After the deployment of constructor, any one call the `fn initialise()`. Because of this the pre configured owner should be hardcoded in the contract and should only be allowed to call `fn initialise()`.
 
-## Additional scripts
+2. Contract Size
 
-The `scripts` folder contains several other scripts that make individual calls to perform the most important actions:
-
-1. [./scripts/getCount.sh](./scripts/getCount.sh) to get the current counter
-2. [./scripts/increment.sh](./scripts/increment.sh) to increment the current counter
-3. [./scripts/setCount.sh](./scripts/setCount.sh) to set the current counter
-
-Remember to set the environment variables in an `.env` file.
-
-## How to run a local dev node
-
-Instructions to setup a local dev node can be found [here](https://docs.arbitrum.io/run-arbitrum-node/run-local-dev-node).
-
-## Useful resources
-
-- [Stylus quickstart](https://docs.arbitrum.io/stylus/stylus-quickstart)
-- [Stylus by example](https://stylus-by-example.org/)
-- [Counter contract](https://github.com/OffchainLabs/stylus-workshop-counter)
-- [Interactions between Rust and Solidity](https://github.com/OffchainLabs/stylus-workshop-rust-solidity/)
-- [Telegram group](https://t.me/arbitrum_stylus)
-- [Discord channel](https://discord.com/channels/585084330037084172/1146789176939909251)
-
-## Stylus reference links
-
-- [Stylus documentation](https://docs.arbitrum.io/stylus/stylus-gentle-introduction)
-- [Stylus SDK](https://github.com/OffchainLabs/stylus-sdk-rs)
-- [Cargo Stylus](https://github.com/OffchainLabs/cargo-stylus)
+I encountered an error - "error code -32000: max code size exceeded" due to the size of the contract being more that 24kb. This is the current limit and the most optimized the stylus sdk can do. For this reason, I have commented out some of the basic checks and obvious logic. Current size is around `23.7kb`.
