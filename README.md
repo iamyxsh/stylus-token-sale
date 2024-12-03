@@ -22,7 +22,7 @@ This token sale was designed to be as close to production as possible. The [Test
 
 These are the protocol contracts -
 
-- [Token Contract](https://sepolia.arbiscan.io/address/0xae0737b533d27742b7bd7d4e0bb3dcad6d78034d)
+- [Token Sale Contract](https://sepolia.arbiscan.io/address/0xae0737b533d27742b7bd7d4e0bb3dcad6d78034d)
 - [Test Token (TST)](https://testnet.routescan.io/address/0x4f5b41d4935969496559230562D8808F242C8dAc/contract/421614/readContract?chainid=421614)
 - [Test USDC (TUSDC)](https://testnet.routescan.io/address/0x4afeEcEbe5c092Ab2B34390DDee322265b30E89a/contract/421614/code)
 - [Oracle](https://testnet.routescan.io/address/0x077Da1E3b74FF872E3Ca20452f232D78A092Acf5/contract/421614/code)
